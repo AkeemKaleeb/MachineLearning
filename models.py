@@ -37,7 +37,8 @@ class PerceptronModel(Module):
         super(PerceptronModel, self).__init__()
         
         "*** YOUR CODE HERE ***"
-        self.w = None #Initialize your weights here
+        # Initialize the weights
+        self.w = Parameter(ones(1, dimensions))
 
     def get_weights(self):
         """
@@ -56,7 +57,8 @@ class PerceptronModel(Module):
         The pytorch function `tensordot` may be helpful here.
         """
         "*** YOUR CODE HERE ***"
-
+        # Compute dot product of weights and input
+        return tensordot(self.w, x, dims = 1)
 
     def get_prediction(self, x):
         """
@@ -65,8 +67,11 @@ class PerceptronModel(Module):
         Returns: 1 or -1
         """
         "*** YOUR CODE HERE ***"
+        # Get result of run
+        result = self.run(x)
 
-
+        # Return 1 if non-negative, -1 otherwise
+        return 1 if result >= 0 else -1
 
     def train(self, dataset):
         """
@@ -80,8 +85,29 @@ class PerceptronModel(Module):
         with no_grad():
             dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
             "*** YOUR CODE HERE ***"
+            # Train until forced break
+            while True:
+                # End condition initially true
+                all_correct = True
 
+                # Loop through every batch from the data loader
+                for batch in dataloader:
+                    # assign values based on batch
+                    x = batch['x']
+                    y = batch['label']
 
+                    # loop through every example in the batch
+                    for i in range(len(x)):
+                        # Get a prediction for the example
+                        prediction = self.get_prediction(x[i])
+
+                        # If the prediction is wrong, run again until correct
+                        if prediction != y[i]:
+                            # Update the weights for wrong examples
+                            self.w += y[i] * x[i]
+                            all_correct = False
+                if all_correct:
+                    break
 
 class RegressionModel(Module):
     """
