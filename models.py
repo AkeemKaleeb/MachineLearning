@@ -85,15 +85,11 @@ class PerceptronModel(Module):
         with no_grad():
             dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
             "*** YOUR CODE HERE ***"
-            # Train until forced break
-            while True:
-                # End condition initially true
-                all_correct = True
+            while True:                                     # Train until forced break
+                all_correct = True                          # Assume all correct
 
-                # Loop through every batch from the data loader
-                for batch in dataloader:
-                    # assign values based on batch
-                    x = batch['x']
+                for batch in dataloader:                    # Loop through every batch from the data loader
+                    x = batch['x']                          # Assign x and y based on batch
                     y = batch['label']
                     prediction = self.get_prediction(x)
                     if prediction != y:
@@ -116,7 +112,13 @@ class RegressionModel(Module):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
-        super().__init__()
+        super(RegressionModel, self).__init__()
+        self.hidden_size1 = 200     # Size of hidden layers for more complex patterns (100-500)
+        self.hidden_size2 = 100     # Size of hidden layers for more complex patterns (100-500)
+
+        self.fc1 = Linear(1, self.hidden_size1)                     # Layer 1
+        self.fc2 = Linear(self.hidden_size1, self.hidden_size2)     # Layer 2
+        self.fc3 = Linear(self.hidden_size2, 1)                     # Layer 3
 
 
 
@@ -130,6 +132,10 @@ class RegressionModel(Module):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+        x = relu(self.fc1(x))       # First ReLu equation
+        x = relu(self.fc2(x))       # Second ReLu equation
+        x = self.fc3(x)             # Convergence and Prediction
+        return x
 
     
     def get_loss(self, x, y):
@@ -143,7 +149,8 @@ class RegressionModel(Module):
         Returns: a tensor of size 1 containing the loss
         """
         "*** YOUR CODE HERE ***"
- 
+        y_prediction = self.forward(x)
+        return mse_loss(y_prediction, y)
   
 
     def train(self, dataset):
@@ -161,7 +168,26 @@ class RegressionModel(Module):
             
         """
         "*** YOUR CODE HERE ***"
+        epochs = 1000       # Time to learn
+        lr = 0.00025        # Convergence Rate (0.0001-0.01)
+        batch_size = 16     # Amount of data sent at once (1-128)
 
+        dataloader = DataLoader(dataset, batch_size, shuffle=True)      # Data Loader for training
+        optimizer = optim.Adam(self.parameters(), lr)                   # Optimizer for convergence
+        for epoch in range(epochs):                                     # Loop through custom number of trials/epoch
+            total_loss = 0                                              # Initialize loss                                 
+            for batch in dataloader:                                    # Loop through every batch
+                x = batch['x']                                          # Assign x and y based on batch               
+                y = batch['label']
+                optimizer.zero_grad()                                   # Zero out gradients
+                loss = self.get_loss(x, y)                              # Get loss
+                loss.backward()                                         # Backward propagation
+                optimizer.step()                                        # Move to next part of the optimizer
+                total_loss += loss.item()                               # Add to total loss
+            avg_loss = total_loss / len(dataloader)                     # Average loss
+            print(f'Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}')    # Print loss
+            if avg_loss <= 0.02:                                        # Break if loss is low enough
+                break
 
             
 
