@@ -168,13 +168,13 @@ class RegressionModel(Module):
             
         """
         "*** YOUR CODE HERE ***"
-        epochs = 1000       # Time to learn
+        trials = 1000       # Time to learn
         lr = 0.00025        # Convergence Rate (0.0001-0.01)
         batch_size = 16     # Amount of data sent at once (1-128)
 
         dataloader = DataLoader(dataset, batch_size, shuffle=True)      # Data Loader for training
         optimizer = optim.Adam(self.parameters(), lr)                   # Optimizer for convergence
-        for epoch in range(epochs):                                     # Loop through custom number of trials/epoch
+        for trial in range(trials):                                     # Loop through custom number of trials
             total_loss = 0                                              # Initialize loss                                 
             for batch in dataloader:                                    # Loop through every batch
                 x = batch['x']                                          # Assign x and y based on batch               
@@ -185,7 +185,7 @@ class RegressionModel(Module):
                 optimizer.step()                                        # Move to next part of the optimizer
                 total_loss += loss.item()                               # Add to total loss
             avg_loss = total_loss / len(dataloader)                     # Average loss
-            print(f'Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}')    # Print loss
+            print(f'Trial {trial+1}/{trials}, Loss: {avg_loss:.4f}')    # Print loss
             if avg_loss <= 0.02:                                        # Break if loss is low enough
                 break
 
@@ -217,6 +217,12 @@ class DigitClassificationModel(Module):
         input_size = 28 * 28
         output_size = 10
         "*** YOUR CODE HERE ***"
+        hidden_size1 = 256          # Size of the first hidden layer
+        hidden_size2 = 128          # Size of the second hidden layer
+
+        self.fc1 = Linear(input_size, hidden_size1)         # First hidden layer
+        self.fc2 = Linear(hidden_size1, hidden_size2)       # Second hidden layer
+        self.fc3 = Linear(hidden_size2, output_size)        # Output layer
 
 
 
@@ -235,6 +241,10 @@ class DigitClassificationModel(Module):
                 (also called logits)
         """
         """ YOUR CODE HERE """
+        x = relu(self.fc1(x))               # Apply ReLU activation after the first layer
+        x = relu(self.fc2(x))               # Apply ReLU activation after the second layer
+        x = self.fc3(x)                     # Output layer (no activation function)
+        return x
 
 
     def get_loss(self, x, y):
@@ -251,6 +261,8 @@ class DigitClassificationModel(Module):
         Returns: a loss tensor
         """
         """ YOUR CODE HERE """
+        y_prediction = self.run(x)
+        return cross_entropy(y_prediction, y)
 
         
 
@@ -259,3 +271,26 @@ class DigitClassificationModel(Module):
         Trains the model.
         """
         """ YOUR CODE HERE """
+
+        epochs = 5                      # Number of epochs
+        learning_rate = 0.001           # Learning rate
+        batch_size = 32                 # Batch size
+
+        dataloader = DataLoader(dataset, batch_size, shuffle = True)
+        optimizer = optim.Adam(self.parameters(), learning_rate)            # Optimizer for convergence
+        for epoch in range(epochs):                                         # Loop through custom number of trials
+            total_loss = 0                                                  # Initialize loss                                 
+            for batch in dataloader:                                        # Loop through every batch
+                x = batch['x']                                              # Assign x and y based on batch               
+                y = batch['label']
+                optimizer.zero_grad()                                       # Zero out gradients
+                loss = self.get_loss(x, y)                                  # Get loss
+                loss.backward()                                             # Backward propagation
+                optimizer.step()                                            # Move to next part of the optimizer
+                total_loss += loss.item()                                   # Add to total loss
+            avg_loss = total_loss / len(dataloader)                         # Average loss
+            validation_accuracy = dataset.get_validation_accuracy()         # Get validation accuracy
+
+            print(f'Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}, Validation Accuracy: {validation_accuracy:.2f}')       # Print loss
+            if validation_accuracy >= .98:                                  # Break if loss is low enough
+                break
