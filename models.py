@@ -58,7 +58,7 @@ class PerceptronModel(Module):
         """
         "*** YOUR CODE HERE ***"
         # Compute dot product of weights and input
-        return tensordot(self.w, x, dims = 1)
+        return tensordot(self.w, x, dims = ([1], [1]))
 
     def get_prediction(self, x):
         """
@@ -95,19 +95,17 @@ class PerceptronModel(Module):
                     # assign values based on batch
                     x = batch['x']
                     y = batch['label']
-
-                    # loop through every example in the batch
-                    for i in range(len(x)):
-                        # Get a prediction for the example
-                        prediction = self.get_prediction(x[i])
-
-                        # If the prediction is wrong, run again until correct
-                        if prediction != y[i]:
-                            # Update the weights for wrong examples
-                            self.w += y[i] * x[i]
-                            all_correct = False
+                    prediction = self.get_prediction(x)
+                    if prediction != y:
+                        all_correct = False
+                        self.w += y * x
                 if all_correct:
                     break
+
+
+
+
+
 
 class RegressionModel(Module):
     """
